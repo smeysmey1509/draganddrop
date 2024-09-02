@@ -1,81 +1,63 @@
 import React, { useState } from "react";
+import ItemList from "./ItemList";
 import "./DragAndDrop.css";
 
 const DragAndDrop = () => {
-  const [items, setItems] = useState([
-    { id: 1, text: "Mouy" },
-    { id: 2, text: "Mey" },
-    { id: 3, text: "Mama" },
-  ]);
+  const [lists, setLists] = useState({
+    1: [
+      { id: 1, text: "Task 1" },
+      { id: 2, text: "Task 2" },
+    ],
+    2: [
+      { id: 3, text: "Task 3" },
+      { id: 4, text: "Task 4" },
+    ],
+    3: [
+      { id: 5, text: "Task 5" },
+      { id: 6, text: "Task 6" },
+    ],
+  });
 
-  const [droppedItems, setDroppedItems] = useState([]);
+  const [draggedItem, setDraggedItem] = useState(null);
 
-  const onDragStart = (e, item, from) => {
-    e.dataTransfer.setData("itemId", item.id);
-    e.dataTransfer.setData("from", from);
+  const onDragStart = (e, index, listId) => {
+    const item = lists[listId][index];
+    setDraggedItem({ item, listId });
   };
 
   const onDragOver = (e) => {
     e.preventDefault();
   };
 
-  const onDrop = (e) => {
-    const itemId = e.dataTransfer.getData("itemId");
-    const from = e.dataTransfer.getData("from");
+  const onDrop = (e, targetListId) => {
+    e.preventDefault();
+    const { item, listId } = draggedItem;
 
-    // const draggedItem = items.find((item) => item.id === parseInt(itemId));
+    if (listId !== targetListId) {
+      const sourceList = lists[listId].filter((i) => i.id !== item.id);
+      const targetList = [...lists[targetListId], item];
 
-    let draggedItem;
-
-    if (from === "items") {
-      draggedItem = items.find((item) => item.id === parseInt(itemId));
-      setItems(items.filter((item) => item.id !== parseInt(itemId)));
-      setDroppedItems([...droppedItems, draggedItem]);
-    } else if (from === "droppedItems") {
-      draggedItem = droppedItems.find((item) => item.id === parseInt(itemId));
-      setDroppedItems(
-        droppedItems.filter((item) => item.id !== draggedItem.id)
-      );
-      setItems([...items, draggedItem]);
+      setLists({
+        ...lists,
+        [listId]: sourceList,
+        [targetListId]: targetList,
+      });
     }
+    setDraggedItem(null);
   };
 
   return (
     <div className="drag-and-drop">
-      <div
-        className="items"
-        onDragOver={(e) => onDragOver(e)}
-        onDrop={(e) => onDrop(e, "items")}
-      >
-        <h2>Items</h2>
-        {items.map((item) => (
-          <div
-            key={item.id}
-            draggable
-            onDragStart={(e) => onDragStart(e, item, "items")}
-            className="draggable-item"
-          >
-            {item.text}
-          </div>
-        ))}
-      </div>
-      <div
-        className="drop-zone"
-        onDragOver={(e) => onDragOver(e)}
-        onDrop={(e) => onDrop(e, "droppedItems")}
-      >
-        <h2>Drop Zone</h2>
-        {droppedItems.map((item) => (
-          <div
-            key={item.id}
-            className="dropped-item"
-            draggable
-            onDragStart={(e) => onDragStart(e, item, "droppedItems")}
-          >
-            {item.text}
-          </div>
-        ))}
-      </div>
+      {Object.keys(lists).map((listId) => (
+        <ItemList
+          key={listId}
+          items={lists[listId]}
+          listId={parseInt(listId)}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        />
+      ))}
     </div>
   );
 };
