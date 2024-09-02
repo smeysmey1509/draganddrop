@@ -1,10 +1,11 @@
+// DraggableItem.js
 import React from "react";
 
 const DraggableItem = ({
   item,
   index,
-  onDragStart,
   listId,
+  onDragStart,
   onDragOver,
   onDrop,
 }) => {
@@ -13,7 +14,7 @@ const DraggableItem = ({
       draggable
       onDragStart={(e) => onDragStart(e, index, listId)}
       onDragOver={(e) => onDragOver(e)}
-      onDrop={(e) => onDrop(e, listId)}
+      onDrop={(e) => onDrop(e, listId, index)}
       className="draggable-item"
     >
       {item.text}

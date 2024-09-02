@@ -1,3 +1,4 @@
+// DragAndDrop.js
 import React, { useState } from "react";
 import ItemList from "./ItemList";
 import "./DragAndDrop.css";
@@ -22,27 +23,43 @@ const DragAndDrop = () => {
 
   const onDragStart = (e, index, listId) => {
     const item = lists[listId][index];
-    setDraggedItem({ item, listId });
+    setDraggedItem({ item, sourceListId: listId, index });
   };
 
   const onDragOver = (e) => {
     e.preventDefault();
   };
 
-  const onDrop = (e, targetListId) => {
+  const onDrop = (e, targetListId, targetIndex) => {
     e.preventDefault();
-    const { item, listId } = draggedItem;
+    if (!draggedItem) return;
 
-    if (listId !== targetListId) {
-      const sourceList = lists[listId].filter((i) => i.id !== item.id);
-      const targetList = [...lists[targetListId], item];
+    const { item, sourceListId } = draggedItem;
+
+    // Handle moving items between different lists
+    if (sourceListId !== targetListId) {
+      const sourceList = lists[sourceListId].filter((i) => i.id !== item.id);
+      const targetList = [...lists[targetListId]];
+
+      targetList.splice(targetIndex, 0, item);
 
       setLists({
         ...lists,
-        [listId]: sourceList,
+        [sourceListId]: sourceList,
         [targetListId]: targetList,
       });
+    } else {
+      // Handle reordering within the same list
+      const sourceList = [...lists[sourceListId]];
+      sourceList.splice(draggedItem.index, 1); // Remove the item from its original position
+      sourceList.splice(targetIndex, 0, item); // Insert the item at the new position
+
+      setLists({
+        ...lists,
+        [sourceListId]: sourceList,
+      });
     }
+
     setDraggedItem(null);
   };
 
@@ -55,7 +72,7 @@ const DragAndDrop = () => {
           listId={parseInt(listId)}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
-          onDrop={onDrop}
+          onDrop={(e) => onDrop(e, parseInt(listId))}
         />
       ))}
     </div>

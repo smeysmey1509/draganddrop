@@ -1,20 +1,18 @@
+// ItemList.js
 import React from "react";
 import DraggableItem from "./DraggableItem";
 
-const ItemList = ({ items, onDragStart, onDragOver, onDrop, listId }) => {
+const ItemList = ({ items, listId, onDragStart, onDragOver, onDrop }) => {
   return (
     <div
       className="item-list"
+      onDragOver={(e) => onDragOver(e)}
       style={{
-        width: "100%",
-        height: "auto",
-        padding: "10px",
+        padding: "18px",
         borderRadius: "8px",
         boxShadow:
-          "rgba(9, 30, 66, 0.25) 0px 1px 1px, rgba(9, 30, 66, 0.13) 0px 0px 1px 1px",
+          "rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px",
       }}
-      onDragOver={(e) => onDragOver(e)}
-      onDrop={(e) => onDrop(e, listId)}
     >
       <h2>List {listId}</h2>
       {items.map((item, index) => (
@@ -24,8 +22,8 @@ const ItemList = ({ items, onDragStart, onDragOver, onDrop, listId }) => {
           index={index}
           listId={listId}
           onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
+          onDragOver={(e) => onDragOver(e, index)}
+          onDrop={(e) => onDrop(e, listId, index)}
         />
       ))}
     </div>
