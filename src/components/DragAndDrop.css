@@ -20,7 +20,7 @@
   margin: 10px 0;
   background-color: #f0f0f0;
   border-radius: 5px;
-  cursor: grab;
+  cursor: move;
 }
 
 .dropped-item {

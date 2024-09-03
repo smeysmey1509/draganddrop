@@ -8,6 +8,7 @@ const ItemList = ({ items, listId, onDragStart, onDragOver, onDrop }) => {
       className="item-list"
       onDragOver={(e) => onDragOver(e)}
       style={{
+        width: "100%",
         padding: "18px",
         borderRadius: "8px",
         boxShadow:
@@ -22,8 +23,8 @@ const ItemList = ({ items, listId, onDragStart, onDragOver, onDrop }) => {
           index={index}
           listId={listId}
           onDragStart={onDragStart}
-          onDragOver={(e) => onDragOver(e, index)}
-          onDrop={(e) => onDrop(e, listId, index)}
+          onDragOver={onDragOver}
+          onDrop={(e) => onDrop(e, index)}
         />
       ))}
     </div>

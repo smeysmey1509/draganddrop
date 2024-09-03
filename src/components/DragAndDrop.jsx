@@ -72,7 +72,7 @@ const DragAndDrop = () => {
           listId={parseInt(listId)}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
-          onDrop={(e) => onDrop(e, parseInt(listId))}
+          onDrop={(e, targetIndex) => onDrop(e, parseInt(listId), targetIndex)}
         />
       ))}
     </div>
