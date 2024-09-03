@@ -11,6 +11,9 @@ const DraggableItem = ({
 }) => {
   const dragPreviewRef = useRef(null);
   const handleDragStart = (e) => {
+    console.log(
+      `Drag Start: ${item.text} from List ${listId} at index ${index}`
+    );
     onDragStart(e, index, listId);
 
     //Set drag image

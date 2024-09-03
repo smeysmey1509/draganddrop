@@ -16,17 +16,23 @@ const ItemList = ({ items, listId, onDragStart, onDragOver, onDrop }) => {
       }}
     >
       <h2>List {listId}</h2>
-      {items.map((item, index) => (
-        <DraggableItem
-          key={item.id}
-          item={item}
-          index={index}
-          listId={listId}
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDrop={(e) => onDrop(e, index)}
-        />
-      ))}
+      {items.length === 0 ? (
+        <div style={{ padding: "10px", textAlign: "center", color: "#888" }}>
+          No Task Available
+        </div>
+      ) : (
+        items.map((item, index) => (
+          <DraggableItem
+            key={item.id}
+            item={item}
+            index={index}
+            listId={listId}
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+            onDrop={(e) => onDrop(e, index)}
+          />
+        ))
+      )}
     </div>
   );
 };
