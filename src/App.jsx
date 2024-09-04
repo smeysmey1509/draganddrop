@@ -1,12 +1,11 @@
-// src/App.js
-import React, { useState } from "react";
-import DragAndDrop from "./components/DragAndDrop";
+import React from "react";
+import DragDropLists from "./components/DragDropList";
 
 const App = () => {
   return (
     <div className="App">
-      <h1 style={{ textAlign: "center" }}>Drag and Drop Demo</h1>
-      <DragAndDrop />
+      <h1>Drag and Drop List</h1>
+      <DragDropLists />
     </div>
   );
 };
