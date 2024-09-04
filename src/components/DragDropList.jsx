@@ -51,12 +51,6 @@ const DragDropLists = () => {
       finalIndex++;
     }
 
-    // Get the current position of the dragged item
-    const draggedElement = document.querySelector(
-      `[data-id="${draggedItem}-${draggedIndex}"]`
-    );
-    const draggedElementRect = draggedElement?.getBoundingClientRect();
-
     // Handle transfer between lists
     if (list !== sourceList) {
       if (sourceList === "list1") {
@@ -87,43 +81,24 @@ const DragDropLists = () => {
       }
     }
 
-    // Get the new position of the dropped item
+    // Remove dragging class from the item and reset states
     requestAnimationFrame(() => {
-      const droppedElement = document.querySelector(
-        `[data-id="${draggedItem}-${finalIndex}"]`
+      const draggedElement = document.querySelector(
+        `[data-id="${draggedItem}-${draggedIndex}"]`
       );
-      const droppedElementRect = droppedElement?.getBoundingClientRect();
-
-      if (draggedElementRect && droppedElementRect) {
-        const deltaX = draggedElementRect.left - droppedElementRect.left;
-        const deltaY = draggedElementRect.top - droppedElementRect.top;
-
-        // Apply the animation
-        droppedElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-        droppedElement.style.transition = "transform 0.3s ease";
-
-        requestAnimationFrame(() => {
-          droppedElement.style.transform = "";
-        });
-
-        // Clean up the transition after animation completes
-        setTimeout(() => {
-          droppedElement.style.transition = "";
-        }, 300);
-      }
-
-      // Remove dragging class from the item
       if (draggedElement) {
         draggedElement.classList.remove("dragging");
+        draggedElement.classList.add("dropped");
+        setTimeout(() => draggedElement.classList.remove("dropped"), 300); // Duration of the animation
       }
-
-      setDraggedItem(null);
-      setSourceList(null);
-      setDraggedIndex(null);
-      setPlaceholderIndex(null);
-      setPlaceholderList(null);
-      setDropPosition("middle");
     });
+
+    setDraggedItem(null);
+    setSourceList(null);
+    setDraggedIndex(null);
+    setPlaceholderIndex(null);
+    setPlaceholderList(null);
+    setDropPosition("middle");
   };
 
   return (
@@ -239,7 +214,7 @@ const styles = {
     border: "2px dashed #ddd",
     borderRadius: "6px",
     position: "absolute",
-    // width: "calc(100% - 20px)", // Adjust width to fit list padding
+    width: "calc(100% - 40px)", // Adjust width to fit list padding
     // left: "10px", // Adjust to fit padding
     margin: "8px 0",
     zIndex: 1,
