@@ -146,21 +146,34 @@ const DragDropLists = () => {
         onDrop={(e) => handleDrop(e, "list2")}
       >
         <h3>List 2</h3>
-        {list2.map((item, index) => (
-          <div
-            key={index}
-            draggable
-            onDragStart={(e) => handleDragStart(e, item, index, "list2")}
-            onDragEnter={(e) => handleDragEnter(e, "list2", index)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => handleDrop(e, "list2")}
-            data-id={`${item}-${index}`}
-            data-index={index}
-            style={styles.item}
+        {list2.length === 0 ? (
+          <h2
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontSize: "16px",
+            }}
           >
-            {item}
-          </div>
-        ))}
+            No Item
+          </h2>
+        ) : (
+          list2.map((item, index) => (
+            <div
+              key={index}
+              draggable
+              onDragStart={(e) => handleDragStart(e, item, index, "list2")}
+              onDragEnter={(e) => handleDragEnter(e, "list2", index)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, "list2")}
+              data-id={`${item}-${index}`}
+              data-index={index}
+              style={styles.item}
+            >
+              {item}
+            </div>
+          ))
+        )}
         {placeholderList === "list2" && placeholderIndex !== null && (
           <div
             style={{
