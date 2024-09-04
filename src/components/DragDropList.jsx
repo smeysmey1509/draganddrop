@@ -193,7 +193,7 @@ const styles = {
     border: "1px solid #ddd",
     borderRadius: "8px",
     backgroundColor: "#fafafa",
-    minHeight: "200px",
+    minHeight: "fit-content",
     position: "relative",
     overflow: "auto",
   },
