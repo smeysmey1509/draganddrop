@@ -1,6 +1,7 @@
 import React from "react";
 import DragDropLists from "./components/DragDropList";
 import DropZone from "./components/DropZone";
+import Canvas from "./components/Canvas";
 
 const App = () => {
   return (
@@ -27,6 +28,17 @@ const App = () => {
         Drop Zone
       </h1>
       <DropZone />
+      <h1
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "18px",
+        }}
+      >
+        Canvas Component
+      </h1>
+      <Canvas />
     </div>
   );
 };

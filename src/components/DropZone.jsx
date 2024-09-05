@@ -12,8 +12,6 @@ const DropZone = () => {
     e.preventDefault();
     setIsDragging(true);
 
-    const itemRect = itemRef.current.getBoundingClientRect();
-
     // Save the initial mouse position and the initial item position
     setInitialMousePos({ x: e.clientX, y: e.clientY });
     setInitialItemPos({ x: currentPos.x, y: currentPos.y });
@@ -65,6 +63,8 @@ const DropZone = () => {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
+
+  console.log("initialMousePos", initialMousePos);
 
   return (
     <div
