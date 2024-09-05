@@ -9,6 +9,12 @@ const Canvas = () => {
     setDroppedItems((prevItems) => [...prevItems, item]);
   };
 
+  const items = [
+    { type: "move", label: "Move", color: "white" },
+    { type: "button", label: "Button", color: "white" },
+    { type: "card", label: "Card", color: "white" },
+  ];
+
   return (
     <div
       style={{
@@ -20,7 +26,7 @@ const Canvas = () => {
         overflow: "hidden",
       }}
     >
-      <CanvasSidebar />
+      <CanvasSidebar items={items} />
       <CanvasContent droppedItems={droppedItems} onDrop={handleDrop} />
     </div>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 
-const CanvasSidebar = () => {
+const CanvasSidebar = ({ items }) => {
   const handleDragStart = (event, item) => {
     event.dataTransfer.setData("text/plain", item);
   };
@@ -43,44 +43,31 @@ const CanvasSidebar = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          gap: "8px",
         }}
       >
-        <div
-          draggable
-          onDragStart={(e) => handleDragStart(e, "move")}
-          style={{
-            width: "100px",
-            height: "100px",
-            textAlign: "center",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "8px",
-            cursor: "move",
-            boxShadow:
-              "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
-          }}
-        >
-          Move
-        </div>
-        <div
-          draggable
-          onDragStart={(e) => handleDragStart(e, "Button")}
-          style={{
-            width: "100px",
-            height: "100px",
-            textAlign: "center",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "8px",
-            cursor: "move",
-            boxShadow:
-              "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
-          }}
-        >
-          Button
-        </div>
+        {items.map((item, index) => (
+          <div
+            key={index}
+            draggable
+            onDragStart={(e) => handleDragStart(e, item.type)}
+            style={{
+              width: "100px",
+              height: "80px",
+              textAlign: "center",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "8px",
+              cursor: "move",
+              boxShadow:
+                "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+              backgroundColor: item.color || "#f0f0f0", // Default background color
+            }}
+          >
+            {item.label}
+          </div>
+        ))}
       </div>
     </div>
   );

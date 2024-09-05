@@ -142,7 +142,7 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
           key={index}
           style={{
             width: "100px",
-            height: "100px",
+            height: "80px",
             textAlign: "center",
             display: "flex",
             justifyContent: "center",
