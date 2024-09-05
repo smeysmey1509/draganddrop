@@ -9,18 +9,18 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
     droppedItems.map(() => ({ x: 0, y: 0 }))
   );
   const [history, setHistory] = useState([]);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(null);
   const dropZoneRef = useRef(null);
+  const itemRefs = useRef([]); // To keep references of items
 
   const handleMouseDown = (e, index) => {
     e.preventDefault();
     setIsDragging(true);
     setDraggingItemIndex(index);
 
-    // Save the initial mouse position and the initial item position
     setInitialMousePos({ x: e.clientX, y: e.clientY });
     setInitialItemPos({ x: positions[index].x, y: positions[index].y });
 
-    // Save the current state to history
     setHistory((prevHistory) => [...prevHistory, positions]);
   };
 
@@ -31,22 +31,19 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
       if (dropZone) {
         const dropZoneRect = dropZone.getBoundingClientRect();
 
-        // Calculate the offset based on the initial mouse position and current mouse position
         const deltaX = e.clientX - initialMousePos.x;
         const deltaY = e.clientY - initialMousePos.y;
 
-        // Calculate new position
         const newX = initialItemPos.x + deltaX;
         const newY = initialItemPos.y + deltaY;
 
-        // Ensure the new position is within the drop zone boundaries
         const constrainedX = Math.max(
           0,
-          Math.min(newX, dropZoneRect.width - 100) // assuming item width is 100px
+          Math.min(newX, dropZoneRect.width - 100)
         );
         const constrainedY = Math.max(
           0,
-          Math.min(newY, dropZoneRect.height - 100) // assuming item height is 100px
+          Math.min(newY, dropZoneRect.height - 100)
         );
 
         const updatedPositions = [...positions];
@@ -85,9 +82,8 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
       const mouseX = event.clientX - dropZoneRect.left;
       const mouseY = event.clientY - dropZoneRect.top;
 
-      // Ensure the dropped item is within the drop zone boundaries
-      const itemWidth = 100; // Width of the item
-      const itemHeight = 100; // Height of the item
+      const itemWidth = 100;
+      const itemHeight = 100;
 
       const constrainedX = Math.max(
         0,
@@ -111,7 +107,7 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
   };
 
   const handleDragOver = (event) => {
-    event.preventDefault(); // Necessary to allow a drop
+    event.preventDefault();
   };
 
   const handleUndo = () => {
@@ -122,7 +118,26 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
     }
   };
 
-  console.log("history", history);
+  const handleItemClick = (index) => {
+    setSelectedItemIndex((prevIndex) => (prevIndex === index ? null : index));
+  };
+
+  useEffect(() => {
+    // Function to handle clicks outside
+    const handleClickOutside = (event) => {
+      if (
+        selectedItemIndex !== null &&
+        !itemRefs.current[selectedItemIndex]?.contains(event.target)
+      ) {
+        setSelectedItemIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [selectedItemIndex]);
 
   return (
     <div
@@ -137,9 +152,11 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
         position: "relative",
       }}
     >
+      <div>Hello</div>
       {droppedItems.map((item, index) => (
         <div
           key={index}
+          ref={(el) => (itemRefs.current[index] = el)} // Save reference to each item
           style={{
             width: "100px",
             height: "80px",
@@ -156,8 +173,13 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
               isDragging && draggingItemIndex === index
                 ? "rgba(60, 64, 67, 0.3) 0px 1px 2px 0.4px, rgba(60, 64, 67, 0.25) 0px 2px 6px 2.8px"
                 : "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+            border: selectedItemIndex === index ? "2px solid #007BFF" : "none",
+            backgroundColor:
+              selectedItemIndex === index ? "#e0f7ff" : "transparent",
+            textTransform: "capitalize",
           }}
           onMouseDown={(e) => handleMouseDown(e, index)}
+          onClick={() => handleItemClick(index)}
         >
           {item}
         </div>
