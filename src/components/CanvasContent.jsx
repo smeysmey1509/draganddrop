@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
+import { AiOutlineDelete } from "react-icons/ai";
+import { BsThreeDots } from "react-icons/bs";
+import { IoDuplicateOutline } from "react-icons/io5";
 
-const CanvasContent = ({ droppedItems, onDrop }) => {
+const CanvasContent = ({ onDrop }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [draggingItemIndex, setDraggingItemIndex] = useState(null);
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
   const [initialItemPos, setInitialItemPos] = useState({ x: 0, y: 0 });
-  const [positions, setPositions] = useState(
-    droppedItems.map(() => ({ x: 0, y: 0 }))
-  );
+  const [positions, setPositions] = useState([]);
+  const [droppedItems, setDroppedItems] = useState([]); // Initialize state
   const [history, setHistory] = useState([]);
   const [selectedItemIndex, setSelectedItemIndex] = useState(null);
   const dropZoneRef = useRef(null);
@@ -95,6 +97,7 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
       );
 
       onDrop(item);
+      setDroppedItems((prevItems) => [...prevItems, item]); // Update state
       setPositions([
         ...positions,
         {
@@ -110,6 +113,7 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
     event.preventDefault();
   };
 
+  // Handle undo
   const handleUndo = () => {
     if (history.length > 0) {
       const lastState = history[history.length - 1];
@@ -122,8 +126,32 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
     setSelectedItemIndex((prevIndex) => (prevIndex === index ? null : index));
   };
 
+  // Handle duplication
+  const handleDuplicate = (index) => {
+    setDroppedItems((prevItems) => {
+      const newItem = prevItems[index];
+      return [...prevItems, newItem];
+    });
+
+    setPositions((prevPositions) => {
+      const newItemPosition = {
+        x: prevPositions[index].x + 10,
+        y: prevPositions[index].y + 10,
+      };
+      return [...prevPositions, newItemPosition];
+    });
+  };
+
+  //Handle Deletion
+  const handleDelete = (index) => {
+    setDroppedItems((prevItems) => prevItems.filter((item, i) => i !== index));
+    setPositions((prevPositions) =>
+      prevPositions.filter((item, i) => i !== index)
+    );
+  };
+
+  // Function to handle clicks outside
   useEffect(() => {
-    // Function to handle clicks outside
     const handleClickOutside = (event) => {
       if (
         selectedItemIndex !== null &&
@@ -148,11 +176,9 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
         width: "80%",
         height: "100%",
         border: "1px dashed black",
-        padding: "10px",
         position: "relative",
       }}
     >
-      <div>Hello</div>
       {droppedItems.map((item, index) => (
         <div
           key={index}
@@ -184,6 +210,51 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
           onClick={() => handleItemClick(index)}
         >
           {item}
+          <div
+            style={{
+              width: "100%",
+              position: "absolute",
+              bottom: "100px",
+              cursor: "pointer",
+              fontSize: "18px",
+              display: selectedItemIndex === index ? "flex" : "none",
+            }}
+          >
+            <ul
+              style={{
+                width: "100%",
+                height: "auto",
+                listStyleType: "none",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                textAlign: "center",
+                gap: "5px",
+                background: "white",
+                fontSize: "18px",
+                padding: "10px 8px",
+                borderRadius: "10px",
+                boxShadow:
+                  "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+              }}
+            >
+              <li
+                style={{ display: "flex" }}
+                onClick={() => handleDuplicate(index)}
+              >
+                <IoDuplicateOutline />
+              </li>
+              <li
+                style={{ display: "flex" }}
+                onClick={() => handleDelete(index)}
+              >
+                <AiOutlineDelete />
+              </li>
+              <li style={{ display: "flex" }}>
+                <BsThreeDots />
+              </li>
+            </ul>
+          </div>
         </div>
       ))}
       <button
