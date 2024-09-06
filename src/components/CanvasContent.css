@@ -1,0 +1,10 @@
+.canvas-content:hover {
+  opacity: 1;
+}
+.list ul li:hover {
+  background-color: #c6cacf;
+  border-radius: 5px;
+}
+.test:hover {
+  border: 2px solid #007bff !important;
+}

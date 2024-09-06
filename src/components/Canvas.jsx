@@ -13,7 +13,6 @@ const Canvas = () => {
     { type: "move", label: "Move", color: "white" },
     { type: "button", label: "Button", color: "white" },
     { type: "card", label: "Card", color: "white" },
-    { type: "profile", label: "Profile", color: "white" },
   ];
 
   return (

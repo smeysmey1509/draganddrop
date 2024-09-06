@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
 import { BsThreeDots } from "react-icons/bs";
 import { IoDuplicateOutline } from "react-icons/io5";
+import "./CanvasContent.css";
+import { GoDotFill } from "react-icons/go";
 
 const CanvasContent = ({ onDrop }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -195,18 +197,21 @@ const CanvasContent = ({ onDrop }) => {
             backgroundColor: "transparent",
             textTransform: "capitalize",
           }}
+          className="test"
           onMouseDown={(e) => handleMouseDown(e, index)}
           onClick={() => handleItemClick(index)}
         >
           {item}
           <div
+            className="list"
             style={{
               width: "100%",
               position: "absolute",
-              bottom: "100px",
+              bottom: `${positions[index].y <= 50 ? -60 : 100}px`,
               cursor: "pointer",
               fontSize: "18px",
               display: selectedItemIndex === index ? "flex" : "none",
+              zIndex: 1001,
             }}
           >
             <ul
@@ -244,9 +249,43 @@ const CanvasContent = ({ onDrop }) => {
               </li>
             </ul>
           </div>
+          {selectedItemIndex == index && (
+            <div>
+              {" "}
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  position: "absolute",
+                  top: "-8px",
+                  left: "-48px",
+                  color: "#007bff",
+                  // background: "#007bff",
+                  // border: "1px solid black",
+                }}
+              >
+                <GoDotFill />
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  position: "absolute",
+                  top: "-8px",
+                  left: "48px",
+                  color: "#007bff",
+                  // background: "#007bff",
+                  // border: "1px solid black",
+                }}
+              >
+                <GoDotFill />
+              </div>
+            </div>
+          )}
         </div>
       ))}
       <button
+        className="canvas-content"
         onClick={handleUndo}
         style={{
           position: "absolute",
@@ -258,6 +297,7 @@ const CanvasContent = ({ onDrop }) => {
           color: "white",
           borderRadius: "5px",
           cursor: "pointer",
+          opacity: "0.8",
         }}
       >
         Undo
