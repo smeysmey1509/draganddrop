@@ -9,36 +9,33 @@ const CanvasContent = ({ onDrop }) => {
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
   const [initialItemPos, setInitialItemPos] = useState({ x: 0, y: 0 });
   const [positions, setPositions] = useState([]);
-  const [droppedItems, setDroppedItems] = useState([]); // Initialize state
+  const [droppedItems, setDroppedItems] = useState([]);
   const [history, setHistory] = useState([]);
   const [selectedItemIndex, setSelectedItemIndex] = useState(null);
   const dropZoneRef = useRef(null);
-  const itemRefs = useRef([]); // To keep references of items
+  const itemRefs = useRef([]);
 
   const handleMouseDown = (e, index) => {
     e.preventDefault();
     setIsDragging(true);
     setDraggingItemIndex(index);
-
     setInitialMousePos({ x: e.clientX, y: e.clientY });
     setInitialItemPos({ x: positions[index].x, y: positions[index].y });
-
-    setHistory((prevHistory) => [...prevHistory, positions]);
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      { items: [...droppedItems], positions: [...positions] },
+    ]);
   };
 
   const handleMouseMove = (e) => {
     if (isDragging && draggingItemIndex !== null) {
       const dropZone = dropZoneRef.current;
-
       if (dropZone) {
         const dropZoneRect = dropZone.getBoundingClientRect();
-
         const deltaX = e.clientX - initialMousePos.x;
         const deltaY = e.clientY - initialMousePos.y;
-
         const newX = initialItemPos.x + deltaX;
         const newY = initialItemPos.y + deltaY;
-
         const constrainedX = Math.max(
           0,
           Math.min(newX, dropZoneRect.width - 100)
@@ -47,7 +44,6 @@ const CanvasContent = ({ onDrop }) => {
           0,
           Math.min(newY, dropZoneRect.height - 100)
         );
-
         const updatedPositions = [...positions];
         updatedPositions[draggingItemIndex] = {
           x: constrainedX,
@@ -77,16 +73,13 @@ const CanvasContent = ({ onDrop }) => {
   const handleDrop = (event) => {
     event.preventDefault();
     const item = event.dataTransfer.getData("text/plain");
-
     const dropZone = dropZoneRef.current;
     if (dropZone) {
       const dropZoneRect = dropZone.getBoundingClientRect();
       const mouseX = event.clientX - dropZoneRect.left;
       const mouseY = event.clientY - dropZoneRect.top;
-
       const itemWidth = 100;
       const itemHeight = 100;
-
       const constrainedX = Math.max(
         0,
         Math.min(mouseX - itemWidth / 2, dropZoneRect.width - itemWidth)
@@ -95,17 +88,13 @@ const CanvasContent = ({ onDrop }) => {
         0,
         Math.min(mouseY - itemHeight / 2, dropZoneRect.height - itemHeight)
       );
-
       onDrop(item);
-      setDroppedItems((prevItems) => [...prevItems, item]); // Update state
-      setPositions([
-        ...positions,
-        {
-          x: constrainedX,
-          y: constrainedY,
-        },
+      setDroppedItems((prevItems) => [...prevItems, item]);
+      setPositions([...positions, { x: constrainedX, y: constrainedY }]);
+      setHistory((prevHistory) => [
+        ...prevHistory,
+        { items: [...droppedItems], positions: [...positions] },
       ]);
-      setHistory((prevHistory) => [...prevHistory, [...positions]]);
     }
   };
 
@@ -113,12 +102,12 @@ const CanvasContent = ({ onDrop }) => {
     event.preventDefault();
   };
 
-  // Handle undo
   const handleUndo = () => {
     if (history.length > 0) {
       const lastState = history[history.length - 1];
       setHistory((prevHistory) => prevHistory.slice(0, -1));
-      setPositions(lastState);
+      setDroppedItems(lastState.items);
+      setPositions(lastState.positions);
     }
   };
 
@@ -126,31 +115,34 @@ const CanvasContent = ({ onDrop }) => {
     setSelectedItemIndex((prevIndex) => (prevIndex === index ? null : index));
   };
 
-  // Handle duplication
   const handleDuplicate = (index) => {
-    setDroppedItems((prevItems) => {
-      const newItem = prevItems[index];
-      return [...prevItems, newItem];
-    });
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      { items: [...droppedItems], positions: [...positions] },
+    ]);
 
-    setPositions((prevPositions) => {
-      const newItemPosition = {
-        x: prevPositions[index].x + 10,
-        y: prevPositions[index].y + 10,
-      };
-      return [...prevPositions, newItemPosition];
-    });
+    const newItem = droppedItems[index];
+    const newItemPosition = {
+      x: positions[index].x + 10,
+      y: positions[index].y + 10,
+    };
+
+    setDroppedItems((prevItems) => [...prevItems, newItem]);
+    setPositions((prevPositions) => [...prevPositions, newItemPosition]);
   };
 
-  //Handle Deletion
   const handleDelete = (index) => {
-    setDroppedItems((prevItems) => prevItems.filter((item, i) => i !== index));
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      { items: [...droppedItems], positions: [...positions] },
+    ]);
+
+    setDroppedItems((prevItems) => prevItems.filter((_, i) => i !== index));
     setPositions((prevPositions) =>
-      prevPositions.filter((item, i) => i !== index)
+      prevPositions.filter((_, i) => i !== index)
     );
   };
 
-  // Function to handle clicks outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -194,10 +186,7 @@ const CanvasContent = ({ onDrop }) => {
             cursor: "move",
             position: "absolute",
             transform: `translate3d(${positions[index].x}px, ${positions[index].y}px, 0px)`,
-            zIndex:
-              isDragging && draggingItemIndex && selectedItemIndex === index
-                ? 1000
-                : 1,
+            zIndex: isDragging && draggingItemIndex === index ? 1000 : 1,
             boxShadow:
               isDragging && draggingItemIndex === index
                 ? "rgba(60, 64, 67, 0.3) 0px 1px 2px 0.4px, rgba(60, 64, 67, 0.25) 0px 2px 6px 2.8px"
@@ -261,12 +250,12 @@ const CanvasContent = ({ onDrop }) => {
         onClick={handleUndo}
         style={{
           position: "absolute",
-          bottom: "10px",
-          left: "10px",
-          padding: "5px 10px",
+          bottom: 10,
+          left: 10,
+          padding: "10px",
+          border: "none",
           backgroundColor: "#007BFF",
           color: "white",
-          border: "none",
           borderRadius: "5px",
           cursor: "pointer",
         }}
