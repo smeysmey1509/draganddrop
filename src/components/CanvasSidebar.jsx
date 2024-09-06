@@ -3,6 +3,7 @@ import React from "react";
 const CanvasSidebar = ({ items }) => {
   const handleDragStart = (event, item) => {
     event.dataTransfer.setData("text/plain", item);
+    console.log("hello");
   };
   return (
     <div

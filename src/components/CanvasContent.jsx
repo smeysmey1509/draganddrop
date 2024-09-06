@@ -156,7 +156,7 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
       {droppedItems.map((item, index) => (
         <div
           key={index}
-          ref={(el) => (itemRefs.current[index] = el)} // Save reference to each item
+          ref={(el) => (itemRefs.current[index] = el)}
           style={{
             width: "100px",
             height: "80px",
@@ -168,14 +168,16 @@ const CanvasContent = ({ droppedItems, onDrop }) => {
             cursor: "move",
             position: "absolute",
             transform: `translate3d(${positions[index].x}px, ${positions[index].y}px, 0px)`,
-            zIndex: isDragging && draggingItemIndex === index ? 2 : 1,
+            zIndex:
+              isDragging && draggingItemIndex && selectedItemIndex === index
+                ? 1000
+                : 1,
             boxShadow:
               isDragging && draggingItemIndex === index
                 ? "rgba(60, 64, 67, 0.3) 0px 1px 2px 0.4px, rgba(60, 64, 67, 0.25) 0px 2px 6px 2.8px"
                 : "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
             border: selectedItemIndex === index ? "2px solid #007BFF" : "none",
-            backgroundColor:
-              selectedItemIndex === index ? "#e0f7ff" : "transparent",
+            backgroundColor: "transparent",
             textTransform: "capitalize",
           }}
           onMouseDown={(e) => handleMouseDown(e, index)}
