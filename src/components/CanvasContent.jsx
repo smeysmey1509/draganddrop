@@ -259,6 +259,7 @@ const CanvasContent = ({ onDrop }) => {
                   top: "-6%",
                   left: "-6%",
                   color: "white",
+                  cursor: "col-resize",
                   borderRadius: "50%",
                   border: "1px solid gray",
                   background: "white",
