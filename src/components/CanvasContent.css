@@ -8,3 +8,8 @@
 .test:hover {
   border: 2px solid #007bff !important;
 }
+.size-btn div:hover {
+  background: #007bff !important;
+  border: none !important;
+  cursor: col-resize !important;
+}

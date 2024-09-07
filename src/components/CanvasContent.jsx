@@ -250,36 +250,130 @@ const CanvasContent = ({ onDrop }) => {
             </ul>
           </div>
           {selectedItemIndex == index && (
-            <div>
-              {" "}
+            <div className="size-btn">
               <div
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: "14px",
+                  height: "14px",
                   position: "absolute",
-                  top: "-8px",
-                  left: "-48px",
-                  color: "#007bff",
-                  // background: "#007bff",
-                  // border: "1px solid black",
+                  top: "-6%",
+                  left: "-6%",
+                  color: "white",
+                  borderRadius: "50%",
+                  border: "1px solid gray",
+                  background: "white",
                 }}
-              >
-                <GoDotFill />
-              </div>
+                onClick={() => alert(123)}
+              ></div>
               <div
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: "14px",
+                  height: "14px",
                   position: "absolute",
-                  top: "-8px",
-                  left: "48px",
-                  color: "#007bff",
+                  top: "-6%",
+                  right: "-6%",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "50%",
                   // background: "#007bff",
-                  // border: "1px solid black",
+                  border: "1px solid gray",
+                  background: "white",
                 }}
-              >
-                <GoDotFill />
-              </div>
+              ></div>
+              <div
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  position: "absolute",
+                  bottom: "-6%",
+                  right: "-6%",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  // background: "#007bff",
+                  border: "1px solid gray",
+                  background: "white",
+                }}
+              ></div>
+              <div
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  position: "absolute",
+                  bottom: "-6%",
+                  left: "-6%",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  // background: "#007bff",
+                  border: "1px solid gray",
+                  background: "white",
+                }}
+              ></div>
+              <div
+                style={{
+                  width: "24px",
+                  height: "10px",
+                  position: "absolute",
+                  top: "-6%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                  // background: "#007bff",
+                  border: "1px solid gray",
+                  background: "white",
+                }}
+              ></div>
+              <div
+                style={{
+                  width: "24px",
+                  height: "10px",
+                  position: "absolute",
+                  bottom: "-6%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                  // background: "#007bff",
+                  border: "1px solid gray",
+                  background: "white",
+                }}
+              ></div>
+              <div
+                style={{
+                  width: "10px",
+                  height: "24px",
+                  position: "absolute",
+                  bottom: "50%",
+                  left: "-6%",
+                  transform: "translateY(50%)",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                  // background: "#007bff",
+                  border: "1px solid gray",
+                  background: "white",
+                }}
+              ></div>
+              <div
+                style={{
+                  width: "10px",
+                  height: "24px",
+                  position: "absolute",
+                  bottom: "50%",
+                  right: "-6%",
+                  transform: "translateY(50%)",
+                  color: "white",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                  // background: "#007bff",
+                  border: "1px solid gray",
+                  background: "white",
+                }}
+              ></div>
             </div>
           )}
         </div>
