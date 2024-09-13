@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import RectangleDrawer from "./RectangleDrawer";
 
 const DropZone = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -7,6 +8,8 @@ const DropZone = () => {
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
   const itemRef = useRef(null);
   const dropZoneRef = useRef(null);
+
+  const GRID_SIZE = 5; // Size of grid cells for snapping
 
   const handleMouseDown = (e) => {
     e.preventDefault();
@@ -44,7 +47,11 @@ const DropZone = () => {
           Math.min(newY, dropZoneRect.height - itemRect.height)
         );
 
-        setCurrentPos({ x: constrainedX, y: constrainedY });
+        // Snap to grid
+        const snappedX = Math.round(constrainedX / GRID_SIZE) * GRID_SIZE;
+        const snappedY = Math.round(constrainedY / GRID_SIZE) * GRID_SIZE;
+
+        setCurrentPos({ x: snappedX, y: snappedY });
       }
     }
   };
@@ -64,15 +71,13 @@ const DropZone = () => {
     };
   }, [isDragging]);
 
-  console.log("initialMousePos", initialMousePos);
-
   return (
     <div
       ref={dropZoneRef}
       style={{
         width: "100%",
-        height: "45vh",
-        border: isDragging ? "2px dashed #007BFF" : "2px dashed grey",
+        height: "100vh",
+        border: isDragging ? "1px dashed #007BFF" : "1px dashed grey",
         position: "relative",
         overflow: "hidden",
         transition: "border-color 0.3s ease-in-out",
@@ -102,6 +107,7 @@ const DropZone = () => {
       >
         Move
       </div>
+      <RectangleDrawer width={1000} height={800} color="none" lineWidth={1} />
     </div>
   );
 };
