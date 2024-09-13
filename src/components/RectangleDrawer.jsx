@@ -89,20 +89,18 @@ const RectangleDrawer = ({
   }, [isDrawing, rectangles, color, lineWidth]);
 
   return (
-    <>
-      <div style={{ position: "relative", width, height }}>
-        <canvas
-          ref={canvasRef}
-          width={width}
-          height={height}
-          style={{
-            border: "1px dashed grey",
-            display: "block",
-            position: "absolute",
-          }}
-          onMouseDown={handleMouseDown}
-        />
-      </div>
+    <div style={{ position: "relative", width, height }}>
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{
+          border: "2px dashed grey",
+          display: "block",
+          position: "absolute",
+        }}
+        onMouseDown={handleMouseDown}
+      />
       {rectangles.map((r, index) => (
         <Rectangle
           key={index}
@@ -114,7 +112,7 @@ const RectangleDrawer = ({
           lineWidth={r.lineWidth}
         />
       ))}
-    </>
+    </div>
   );
 };
 
