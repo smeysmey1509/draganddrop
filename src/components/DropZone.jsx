@@ -17,6 +17,34 @@ const DropZone = () => {
   const [selectedTool, setSelectedTool] = useState("draw"); // Added state for the selected tool
   const dropZoneRef = useRef(null);
 
+  // Load rectangles from local storage
+  useEffect(() => {
+    const savedRectangles =
+      JSON.parse(localStorage.getItem("rectangles")) || [];
+    setRectangles(savedRectangles);
+  }, []);
+
+  // Save rectangles to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem("rectangles", JSON.stringify(rectangles));
+  }, [rectangles]);
+
+  // Click outside handler
+  const handleClickOutside = (e) => {
+    if (dropZoneRef.current && !dropZoneRef.current.contains(e.target)) {
+      setSelectedRectangleIndex(null);
+    }
+  };
+
+  // Attach and detach the click outside event listener
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const getRectangleIndexAtPosition = (x, y) => {
     return rectangles.findIndex((rect) => {
       return (
