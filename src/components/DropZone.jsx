@@ -1,13 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Toolbar from "./Toolbar"; // Adjust the import path as needed
 
 const DropZone = () => {
-  const [selectedTool, setSelectedTool] = useState("draw"); // Track the selected tool
-  const [isDrawing, setIsDrawing] = useState(false);
   const [rectangles, setRectangles] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [newRectangle, setNewRectangle] = useState(null);
-  const [movingRectangleIndex, setMovingRectangleIndex] = useState(null);
-  const [resizingRectangleIndex, setResizingRectangleIndex] = useState(null);
   const [selectedRectangleIndex, setSelectedRectangleIndex] = useState(null);
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
   const [initialRectPos, setInitialRectPos] = useState({ x: 0, y: 0 });
@@ -15,8 +12,10 @@ const DropZone = () => {
     width: 0,
     height: 0,
   });
+  const [isResizing, setIsResizing] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
+  const [selectedTool, setSelectedTool] = useState("draw"); // Added state for the selected tool
   const dropZoneRef = useRef(null);
-  const containerRef = useRef(null);
 
   const getRectangleIndexAtPosition = (x, y) => {
     return rectangles.findIndex((rect) => {
@@ -38,12 +37,12 @@ const DropZone = () => {
 
       const clickedRectangleIndex = getRectangleIndexAtPosition(startX, startY);
 
-      if (
-        selectedTool === "resize" &&
-        e.target.dataset.resizeIndex !== undefined
-      ) {
+      if (e.target.dataset.resizeIndex !== undefined) {
+        // Resize mode
         const resizeIndex = parseInt(e.target.dataset.resizeIndex, 10);
-        setResizingRectangleIndex(resizeIndex);
+        setIsResizing(true);
+        setIsMoving(false); // Ensure moving is reset
+        setSelectedTool("resize"); // Set the tool to resize
         setInitialMousePos({ x: e.clientX, y: e.clientY });
         setInitialRectPos({
           x: rectangles[resizeIndex].startX,
@@ -54,28 +53,29 @@ const DropZone = () => {
           height: rectangles[resizeIndex].height,
         });
         setSelectedRectangleIndex(resizeIndex);
-      } else if (selectedTool === "move" && clickedRectangleIndex !== -1) {
-        setMovingRectangleIndex(clickedRectangleIndex);
+      } else if (clickedRectangleIndex !== -1) {
+        // Move or select mode
+        setIsMoving(true);
+        setIsResizing(false); // Ensure resizing is reset
+        setSelectedTool("move"); // Set the tool to move
+        setSelectedRectangleIndex(clickedRectangleIndex);
         setInitialMousePos({ x: e.clientX, y: e.clientY });
         setInitialRectPos({
           x: rectangles[clickedRectangleIndex].startX,
           y: rectangles[clickedRectangleIndex].startY,
         });
-        setSelectedRectangleIndex(clickedRectangleIndex);
-      } else if (selectedTool === "draw") {
-        if (clickedRectangleIndex !== -1) {
-          // Select the rectangle if clicked
-          setSelectedRectangleIndex(clickedRectangleIndex);
-        } else {
-          // Start drawing a new rectangle
-          setIsDrawing(true);
-          setNewRectangle({
-            startX,
-            startY,
-            width: 0,
-            height: 0,
-          });
-        }
+      } else {
+        // Draw mode
+        setIsDrawing(true);
+        setIsMoving(false); // Ensure moving is reset
+        setIsResizing(false); // Ensure resizing is reset
+        setSelectedTool("draw"); // Set the tool to draw
+        setNewRectangle({
+          startX,
+          startY,
+          width: 0,
+          height: 0,
+        });
       }
     }
   };
@@ -98,13 +98,13 @@ const DropZone = () => {
             height,
           }));
         }
-      } else if (movingRectangleIndex !== null) {
+      } else if (isMoving && selectedRectangleIndex !== null) {
         const deltaX = e.clientX - initialMousePos.x;
         const deltaY = e.clientY - initialMousePos.y;
 
         setRectangles((prev) =>
           prev.map((rect, index) =>
-            index === movingRectangleIndex
+            index === selectedRectangleIndex
               ? {
                   ...rect,
                   startX: initialRectPos.x + deltaX,
@@ -113,13 +113,13 @@ const DropZone = () => {
               : rect
           )
         );
-      } else if (resizingRectangleIndex !== null) {
+      } else if (isResizing && selectedRectangleIndex !== null) {
         const deltaX = e.clientX - initialMousePos.x;
         const deltaY = e.clientY - initialMousePos.y;
 
         setRectangles((prev) =>
           prev.map((rect, index) =>
-            index === resizingRectangleIndex
+            index === selectedRectangleIndex
               ? {
                   ...rect,
                   width: Math.max(initialRectSize.width + deltaX, 0),
@@ -133,11 +133,12 @@ const DropZone = () => {
     [
       isDrawing,
       newRectangle,
-      movingRectangleIndex,
+      isMoving,
       initialMousePos,
       initialRectPos,
+      selectedRectangleIndex,
+      isResizing,
       initialRectSize,
-      resizingRectangleIndex,
       rectangles,
     ]
   );
@@ -149,33 +150,25 @@ const DropZone = () => {
         setRectangles((prev) => [...prev, newRectangle]);
       }
       setNewRectangle(null);
-    } else if (movingRectangleIndex !== null) {
-      setMovingRectangleIndex(null);
-    } else if (resizingRectangleIndex !== null) {
-      setResizingRectangleIndex(null);
-    }
-  };
-
-  const handleClickOutside = (e) => {
-    if (containerRef.current && !containerRef.current.contains(e.target)) {
-      setSelectedRectangleIndex(null);
+    } else if (isMoving) {
+      setIsMoving(false);
+    } else if (isResizing) {
+      setIsResizing(false);
     }
   };
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleMouseMove]);
 
   return (
-    <div ref={containerRef}>
+    <div>
       <Toolbar selectedTool={selectedTool} onSelectTool={setSelectedTool} />
       <div
         ref={dropZoneRef}
@@ -205,25 +198,27 @@ const DropZone = () => {
               backgroundColor: "#fff",
               boxShadow:
                 "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
-              cursor: selectedTool === "move" ? "move" : "auto",
+              cursor: isMoving ? "move" : "auto",
               border:
                 selectedRectangleIndex === index ? "2px solid #007BFF" : "none",
               zIndex: selectedRectangleIndex === index ? 1 : 0,
             }}
           >
             {/* Resizing handles */}
-            <div
-              style={{
-                position: "absolute",
-                right: "-5px",
-                bottom: "-5px",
-                width: "10px",
-                height: "10px",
-                backgroundColor: "#007BFF",
-                cursor: "nwse-resize",
-                zIndex: selectedRectangleIndex === index ? 1 : 0,
-              }}
-            />
+            {selectedRectangleIndex === index && (
+              <div
+                data-resize-index={index}
+                style={{
+                  position: "absolute",
+                  right: "-5px",
+                  bottom: "-5px",
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: "#007BFF",
+                  cursor: "nwse-resize",
+                }}
+              />
+            )}
           </div>
         ))}
         {/* Draw new rectangle */}

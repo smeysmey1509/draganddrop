@@ -3,35 +3,41 @@ import React from "react";
 const Toolbar = ({ selectedTool, onSelectTool }) => {
   return (
     <div
-      style={{ display: "flex", padding: "10px", backgroundColor: "#f1f1f1" }}
+      style={{
+        display: "flex",
+        padding: "10px",
+        borderBottom: "1px solid #ccc",
+      }}
     >
       <button
-        onClick={() => onSelectTool("draw")}
         style={{
-          backgroundColor: selectedTool === "draw" ? "#007BFF" : "transparent",
+          margin: "0 5px",
+          backgroundColor: selectedTool === "draw" ? "#007BFF" : "#fff",
           color: selectedTool === "draw" ? "#fff" : "#000",
         }}
+        onClick={() => onSelectTool("draw")}
       >
-        Rectangle
+        Draw
       </button>
       <button
-        onClick={() => onSelectTool("resize")}
         style={{
-          backgroundColor:
-            selectedTool === "resize" ? "#007BFF" : "transparent",
-          color: selectedTool === "resize" ? "#fff" : "#000",
-        }}
-      >
-        Resize
-      </button>
-      <button
-        onClick={() => onSelectTool("move")}
-        style={{
-          backgroundColor: selectedTool === "move" ? "#007BFF" : "transparent",
+          margin: "0 5px",
+          backgroundColor: selectedTool === "move" ? "#007BFF" : "#fff",
           color: selectedTool === "move" ? "#fff" : "#000",
         }}
+        onClick={() => onSelectTool("move")}
       >
         Move
+      </button>
+      <button
+        style={{
+          margin: "0 5px",
+          backgroundColor: selectedTool === "resize" ? "#007BFF" : "#fff",
+          color: selectedTool === "resize" ? "#fff" : "#000",
+        }}
+        onClick={() => onSelectTool("resize")}
+      >
+        Resize
       </button>
     </div>
   );
