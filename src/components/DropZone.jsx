@@ -36,7 +36,6 @@ const DropZone = () => {
     }
   };
 
-  // Attach and detach the click outside event listener
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
 
