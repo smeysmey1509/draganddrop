@@ -1,206 +1,248 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Toolbar from "./Toolbar"; // Adjust the import path as needed
 
 const DropZone = () => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeDirection, setResizeDirection] = useState(null); // For handling direction
+  const [selectedTool, setSelectedTool] = useState("draw"); // Track the selected tool
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [rectangles, setRectangles] = useState([]);
+  const [newRectangle, setNewRectangle] = useState(null);
+  const [movingRectangleIndex, setMovingRectangleIndex] = useState(null);
+  const [resizingRectangleIndex, setResizingRectangleIndex] = useState(null);
+  const [selectedRectangleIndex, setSelectedRectangleIndex] = useState(null);
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
-  const [initialItemPos, setInitialItemPos] = useState({ x: 0, y: 0 });
-  const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
-  const [itemSize, setItemSize] = useState({ width: 100, height: 100 });
-  const itemRef = useRef(null);
+  const [initialRectPos, setInitialRectPos] = useState({ x: 0, y: 0 });
+  const [initialRectSize, setInitialRectSize] = useState({
+    width: 0,
+    height: 0,
+  });
   const dropZoneRef = useRef(null);
+  const containerRef = useRef(null);
 
-  const GRID_SIZE = 5; // Size of grid cells for snapping
-
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-    setInitialMousePos({ x: e.clientX, y: e.clientY });
-    setInitialItemPos({ x: currentPos.x, y: currentPos.y });
+  const getRectangleIndexAtPosition = (x, y) => {
+    return rectangles.findIndex((rect) => {
+      return (
+        x >= rect.startX &&
+        x <= rect.startX + rect.width &&
+        y >= rect.startY &&
+        y <= rect.startY + rect.height
+      );
+    });
   };
 
-  const handleResizeMouseDown = (e, direction) => {
-    e.preventDefault();
-    setIsResizing(true);
-    setResizeDirection(direction); // Set the direction being resized
-    setInitialMousePos({ x: e.clientX, y: e.clientY });
+  const handleMouseDown = (e) => {
+    const dropZone = dropZoneRef.current;
+    if (dropZone) {
+      const dropZoneRect = dropZone.getBoundingClientRect();
+      const startX = e.clientX - dropZoneRect.left;
+      const startY = e.clientY - dropZoneRect.top;
+
+      const clickedRectangleIndex = getRectangleIndexAtPosition(startX, startY);
+
+      if (
+        selectedTool === "resize" &&
+        e.target.dataset.resizeIndex !== undefined
+      ) {
+        const resizeIndex = parseInt(e.target.dataset.resizeIndex, 10);
+        setResizingRectangleIndex(resizeIndex);
+        setInitialMousePos({ x: e.clientX, y: e.clientY });
+        setInitialRectPos({
+          x: rectangles[resizeIndex].startX,
+          y: rectangles[resizeIndex].startY,
+        });
+        setInitialRectSize({
+          width: rectangles[resizeIndex].width,
+          height: rectangles[resizeIndex].height,
+        });
+        setSelectedRectangleIndex(resizeIndex);
+      } else if (selectedTool === "move" && clickedRectangleIndex !== -1) {
+        setMovingRectangleIndex(clickedRectangleIndex);
+        setInitialMousePos({ x: e.clientX, y: e.clientY });
+        setInitialRectPos({
+          x: rectangles[clickedRectangleIndex].startX,
+          y: rectangles[clickedRectangleIndex].startY,
+        });
+        setSelectedRectangleIndex(clickedRectangleIndex);
+      } else if (selectedTool === "draw") {
+        if (clickedRectangleIndex !== -1) {
+          // Select the rectangle if clicked
+          setSelectedRectangleIndex(clickedRectangleIndex);
+        } else {
+          // Start drawing a new rectangle
+          setIsDrawing(true);
+          setNewRectangle({
+            startX,
+            startY,
+            width: 0,
+            height: 0,
+          });
+        }
+      }
+    }
   };
 
   const handleMouseMove = useCallback(
     (e) => {
-      if (isDragging) {
+      if (isDrawing && newRectangle) {
         const dropZone = dropZoneRef.current;
-        const item = itemRef.current;
-
-        if (dropZone && item) {
+        if (dropZone) {
           const dropZoneRect = dropZone.getBoundingClientRect();
-          const itemRect = item.getBoundingClientRect();
+          const currentX = e.clientX - dropZoneRect.left;
+          const currentY = e.clientY - dropZoneRect.top;
 
-          const deltaX = e.clientX - initialMousePos.x;
-          const deltaY = e.clientY - initialMousePos.y;
+          const width = currentX - newRectangle.startX;
+          const height = currentY - newRectangle.startY;
 
-          const newX = initialItemPos.x + deltaX;
-          const newY = initialItemPos.y + deltaY;
-
-          const constrainedX = Math.max(
-            0,
-            Math.min(newX, dropZoneRect.width - itemRect.width)
-          );
-          const constrainedY = Math.max(
-            0,
-            Math.min(newY, dropZoneRect.height - itemRect.height)
-          );
-
-          const snappedX = Math.round(constrainedX / GRID_SIZE) * GRID_SIZE;
-          const snappedY = Math.round(constrainedY / GRID_SIZE) * GRID_SIZE;
-
-          setCurrentPos({ x: snappedX, y: snappedY });
+          setNewRectangle((prev) => ({
+            ...prev,
+            width,
+            height,
+          }));
         }
-      } else if (isResizing) {
+      } else if (movingRectangleIndex !== null) {
         const deltaX = e.clientX - initialMousePos.x;
         const deltaY = e.clientY - initialMousePos.y;
 
-        let newWidth = itemSize.width;
-        let newHeight = itemSize.height;
-        let newX = currentPos.x;
-        let newY = currentPos.y;
+        setRectangles((prev) =>
+          prev.map((rect, index) =>
+            index === movingRectangleIndex
+              ? {
+                  ...rect,
+                  startX: initialRectPos.x + deltaX,
+                  startY: initialRectPos.y + deltaY,
+                }
+              : rect
+          )
+        );
+      } else if (resizingRectangleIndex !== null) {
+        const deltaX = e.clientX - initialMousePos.x;
+        const deltaY = e.clientY - initialMousePos.y;
 
-        if (resizeDirection === "bottom-right") {
-          newWidth = Math.max(50, itemSize.width + deltaX);
-          newHeight = Math.max(50, itemSize.height + deltaY);
-        } else if (resizeDirection === "bottom-left") {
-          newWidth = Math.max(50, itemSize.width - deltaX);
-          newHeight = Math.max(50, itemSize.height + deltaY);
-          newX = currentPos.x + deltaX;
-        } else if (resizeDirection === "top-right") {
-          newWidth = Math.max(50, itemSize.width + deltaX);
-          newHeight = Math.max(50, itemSize.height - deltaY);
-          newY = currentPos.y + deltaY;
-        } else if (resizeDirection === "top-left") {
-          newWidth = Math.max(50, itemSize.width - deltaX);
-          newHeight = Math.max(50, itemSize.height - deltaY);
-          newX = currentPos.x + deltaX;
-          newY = currentPos.y + deltaY;
-        }
-
-        setItemSize({ width: newWidth, height: newHeight });
-        setCurrentPos({ x: newX, y: newY });
-        setInitialMousePos({ x: e.clientX, y: e.clientY });
+        setRectangles((prev) =>
+          prev.map((rect, index) =>
+            index === resizingRectangleIndex
+              ? {
+                  ...rect,
+                  width: Math.max(initialRectSize.width + deltaX, 0),
+                  height: Math.max(initialRectSize.height + deltaY, 0),
+                }
+              : rect
+          )
+        );
       }
     },
     [
-      isDragging,
-      isResizing,
+      isDrawing,
+      newRectangle,
+      movingRectangleIndex,
       initialMousePos,
-      initialItemPos,
-      resizeDirection,
-      itemSize,
-      currentPos,
+      initialRectPos,
+      initialRectSize,
+      resizingRectangleIndex,
+      rectangles,
     ]
   );
 
   const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false);
-    } else if (isResizing) {
-      setIsResizing(false);
-      setResizeDirection(null); // Reset resize direction
+    if (isDrawing) {
+      setIsDrawing(false);
+      if (newRectangle.width !== 0 && newRectangle.height !== 0) {
+        setRectangles((prev) => [...prev, newRectangle]);
+      }
+      setNewRectangle(null);
+    } else if (movingRectangleIndex !== null) {
+      setMovingRectangleIndex(null);
+    } else if (resizingRectangleIndex !== null) {
+      setResizingRectangleIndex(null);
+    }
+  };
+
+  const handleClickOutside = (e) => {
+    if (containerRef.current && !containerRef.current.contains(e.target)) {
+      setSelectedRectangleIndex(null);
     }
   };
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleMouseMove]);
 
   return (
-    <div
-      ref={dropZoneRef}
-      style={{
-        width: "100%",
-        height: "100vh",
-        border: isDragging ? "1px dashed #007BFF" : "1px dashed grey",
-        position: "relative",
-        overflow: "hidden",
-        transition: "border-color 0.3s ease-in-out",
-      }}
-    >
-      {/* Draggable & Resizable Button */}
+    <div ref={containerRef}>
+      <Toolbar selectedTool={selectedTool} onSelectTool={setSelectedTool} />
       <div
-        ref={itemRef}
+        ref={dropZoneRef}
         style={{
-          width: `${itemSize.width}px`,
-          height: `${itemSize.height}px`,
-          textAlign: "center",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "8px",
-          cursor: isDragging ? "move" : "default",
-          boxShadow: isDragging
-            ? "rgba(60, 64, 67, 0.3) 0px 1px 2px 0.4px, rgba(60, 64, 67, 0.25) 0px 2px 6px 2.8px"
-            : "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
-          position: "absolute",
-          transform: `translate3d(${currentPos.x}px, ${currentPos.y}px, 0px)`,
-          transition: isDragging ? "none" : "transform 0.3s ease-in-out",
-          zIndex: 2,
-          backgroundColor: "#f0f0f0",
+          width: "100%",
+          height: "100vh",
+          border: "1px dashed grey",
+          position: "relative",
+          overflow: "hidden",
         }}
         onMouseDown={handleMouseDown}
       >
-        Button
-        {/* Resize handles at the four corners */}
-        <div
-          style={resizeHandleStyle("bottom-right")}
-          onMouseDown={(e) => handleResizeMouseDown(e, "bottom-right")}
-        />
-        <div
-          style={resizeHandleStyle("bottom-left")}
-          onMouseDown={(e) => handleResizeMouseDown(e, "bottom-left")}
-        />
-        <div
-          style={resizeHandleStyle("top-right")}
-          onMouseDown={(e) => handleResizeMouseDown(e, "top-right")}
-        />
-        <div
-          style={resizeHandleStyle("top-left")}
-          onMouseDown={(e) => handleResizeMouseDown(e, "top-left")}
-        />
+        {/* Render existing rectangles */}
+        {rectangles.map((rect, index) => (
+          <div
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering parent onMouseDown
+              setSelectedRectangleIndex(index);
+            }}
+            style={{
+              position: "absolute",
+              left: rect.startX + "px",
+              top: rect.startY + "px",
+              width: rect.width + "px",
+              height: rect.height + "px",
+              backgroundColor: "#fff",
+              boxShadow:
+                "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+              cursor: selectedTool === "move" ? "move" : "auto",
+              border:
+                selectedRectangleIndex === index ? "2px solid #007BFF" : "none",
+              zIndex: selectedRectangleIndex === index ? 1 : 0,
+            }}
+          >
+            {/* Resizing handles */}
+            <div
+              style={{
+                position: "absolute",
+                right: "-5px",
+                bottom: "-5px",
+                width: "10px",
+                height: "10px",
+                backgroundColor: "#007BFF",
+                cursor: "nwse-resize",
+                zIndex: selectedRectangleIndex === index ? 1 : 0,
+              }}
+            />
+          </div>
+        ))}
+        {/* Draw new rectangle */}
+        {newRectangle && (
+          <div
+            style={{
+              position: "absolute",
+              left: newRectangle.startX + "px",
+              top: newRectangle.startY + "px",
+              width: newRectangle.width + "px",
+              height: newRectangle.height + "px",
+              border: "1.2px solid #007BFF",
+              backgroundColor: "#D9D9D9",
+            }}
+          />
+        )}
       </div>
     </div>
   );
-};
-
-// Helper function to generate styles for resize handles based on their position
-const resizeHandleStyle = (position) => {
-  const size = "10px";
-  const backgroundColor = "#000";
-  const commonStyle = {
-    width: size,
-    height: size,
-    position: "absolute",
-    backgroundColor,
-    zIndex: 3,
-  };
-
-  switch (position) {
-    case "bottom-right":
-      return { ...commonStyle, bottom: 0, right: 0, cursor: "se-resize" };
-    case "bottom-left":
-      return { ...commonStyle, bottom: 0, left: 0, cursor: "sw-resize" };
-    case "top-right":
-      return { ...commonStyle, top: 0, right: 0, cursor: "ne-resize" };
-    case "top-left":
-      return { ...commonStyle, top: 0, left: 0, cursor: "nw-resize" };
-    default:
-      return commonStyle;
-  }
 };
 
 export default DropZone;
