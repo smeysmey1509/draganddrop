@@ -1,402 +1,225 @@
 import React, { useState, useRef, useEffect } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
-import { BsThreeDots } from "react-icons/bs";
 import { IoDuplicateOutline } from "react-icons/io5";
 import "./CanvasContent.css";
-import { GoDotFill } from "react-icons/go";
+import Toolbar from "./Toolbar";
 
 const CanvasContent = ({ onDrop }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [draggingItemIndex, setDraggingItemIndex] = useState(null);
+  const [resizingItemIndex, setResizingItemIndex] = useState(null);
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
   const [initialItemPos, setInitialItemPos] = useState({ x: 0, y: 0 });
-  const [positions, setPositions] = useState([]);
-  const [droppedItems, setDroppedItems] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [initialRectSize, setInitialRectSize] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [rectStartPos, setRectStartPos] = useState(null);
+  const [rectangles, setRectangles] = useState([]);
   const [selectedItemIndex, setSelectedItemIndex] = useState(null);
-  const dropZoneRef = useRef(null);
-  const itemRefs = useRef([]);
+  const [selectedTool, setSelectedTool] = useState(null);
+  const canvasRef = useRef(null);
 
-  const handleMouseDown = (e, index) => {
-    e.preventDefault();
-    setIsDragging(true);
-    setDraggingItemIndex(index);
-    setInitialMousePos({ x: e.clientX, y: e.clientY });
-    setInitialItemPos({ x: positions[index].x, y: positions[index].y });
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      { items: [...droppedItems], positions: [...positions] },
-    ]);
-  };
-
-  const handleMouseMove = (e) => {
-    if (isDragging && draggingItemIndex !== null) {
-      const dropZone = dropZoneRef.current;
-      if (dropZone) {
-        const dropZoneRect = dropZone.getBoundingClientRect();
-        const deltaX = e.clientX - initialMousePos.x;
-        const deltaY = e.clientY - initialMousePos.y;
-        const newX = initialItemPos.x + deltaX;
-        const newY = initialItemPos.y + deltaY;
-        const constrainedX = Math.max(
-          0,
-          Math.min(newX, dropZoneRect.width - 100)
-        );
-        const constrainedY = Math.max(
-          0,
-          Math.min(newY, dropZoneRect.height - 100)
-        );
-        const updatedPositions = [...positions];
-        updatedPositions[draggingItemIndex] = {
-          x: constrainedX,
-          y: constrainedY,
-        };
-        setPositions(updatedPositions);
-      }
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      setDraggingItemIndex(null);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging, draggingItemIndex]);
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    const item = event.dataTransfer.getData("text/plain");
-    const dropZone = dropZoneRef.current;
-    if (dropZone) {
-      const dropZoneRect = dropZone.getBoundingClientRect();
-      const mouseX = event.clientX - dropZoneRect.left;
-      const mouseY = event.clientY - dropZoneRect.top;
-      const itemWidth = 100;
-      const itemHeight = 100;
-      const constrainedX = Math.max(
-        0,
-        Math.min(mouseX - itemWidth / 2, dropZoneRect.width - itemWidth)
-      );
-      const constrainedY = Math.max(
-        0,
-        Math.min(mouseY - itemHeight / 2, dropZoneRect.height - itemHeight)
-      );
-      onDrop(item);
-      setDroppedItems((prevItems) => [...prevItems, item]);
-      setPositions([...positions, { x: constrainedX, y: constrainedY }]);
-      setHistory((prevHistory) => [
-        ...prevHistory,
-        { items: [...droppedItems], positions: [...positions] },
+  const handleMouseDownCanvas = (e) => {
+    if (selectedTool === "draw") {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const startX = e.clientX - canvasRect.left;
+      const startY = e.clientY - canvasRect.top;
+      setRectStartPos({ x: startX, y: startY });
+      setRectangles((prev) => [
+        ...prev,
+        { x: startX, y: startY, width: 0, height: 0 },
       ]);
     }
   };
 
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  const handleUndo = () => {
-    if (history.length > 0) {
-      const lastState = history[history.length - 1];
-      setHistory((prevHistory) => prevHistory.slice(0, -1));
-      setDroppedItems(lastState.items);
-      setPositions(lastState.positions);
+  const handleMouseMoveCanvas = (e) => {
+    if (rectStartPos) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const currentX = e.clientX - canvasRect.left;
+      const currentY = e.clientY - canvasRect.top;
+      const updatedRectangles = [...rectangles];
+      const lastIndex = updatedRectangles.length - 1;
+      updatedRectangles[lastIndex] = {
+        x: rectStartPos.x,
+        y: rectStartPos.y,
+        width: currentX - rectStartPos.x,
+        height: currentY - rectStartPos.y,
+      };
+      setRectangles(updatedRectangles);
+    }
+    if (isDragging && draggingItemIndex !== null) {
+      const dropZone = canvasRef.current;
+      const dropZoneRect = dropZone.getBoundingClientRect();
+      const deltaX = e.clientX - initialMousePos.x;
+      const deltaY = e.clientY - initialMousePos.y;
+      const newX = initialItemPos.x + deltaX;
+      const newY = initialItemPos.y + deltaY;
+      const updatedRectangles = [...rectangles];
+      updatedRectangles[draggingItemIndex] = {
+        ...updatedRectangles[draggingItemIndex],
+        x: newX,
+        y: newY,
+      };
+      setRectangles(updatedRectangles);
+    }
+    if (isResizing && resizingItemIndex !== null) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const currentX = e.clientX - canvasRect.left;
+      const currentY = e.clientY - canvasRect.top;
+      const updatedRectangles = [...rectangles];
+      updatedRectangles[resizingItemIndex] = {
+        ...updatedRectangles[resizingItemIndex],
+        width: currentX - updatedRectangles[resizingItemIndex].x,
+        height: currentY - updatedRectangles[resizingItemIndex].y,
+      };
+      setRectangles(updatedRectangles);
     }
   };
 
-  const handleItemClick = (index) => {
-    setSelectedItemIndex((prevIndex) => (prevIndex === index ? null : index));
+  const handleMouseUpCanvas = () => {
+    setRectStartPos(null);
+    setIsDragging(false);
+    setIsResizing(false);
   };
 
-  const handleDuplicate = (index) => {
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      { items: [...droppedItems], positions: [...positions] },
-    ]);
-
-    const newItem = droppedItems[index];
-    const newItemPosition = {
-      x: positions[index].x + 10,
-      y: positions[index].y + 10,
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMoveCanvas);
+    window.addEventListener("mouseup", handleMouseUpCanvas);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMoveCanvas);
+      window.removeEventListener("mouseup", handleMouseUpCanvas);
     };
+  }, [
+    isDragging,
+    isResizing,
+    rectStartPos,
+    draggingItemIndex,
+    resizingItemIndex,
+  ]);
 
-    setDroppedItems((prevItems) => [...prevItems, newItem]);
-    setPositions((prevPositions) => [...prevPositions, newItemPosition]);
+  const handleSelectTool = (tool) => {
+    setSelectedTool(tool);
   };
 
-  const handleDelete = (index) => {
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      { items: [...droppedItems], positions: [...positions] },
-    ]);
+  const handleRectMouseDown = (e, index) => {
+    e.preventDefault();
+    if (e.target.classList.contains("resize-handle")) {
+      setIsResizing(true);
+      setResizingItemIndex(index);
+      const rect = e.target.getBoundingClientRect();
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      setInitialMousePos({ x: e.clientX, y: e.clientY });
+      setInitialRectSize({
+        width: rect.width,
+        height: rect.height,
+      });
+    } else {
+      setIsDragging(true);
+      setDraggingItemIndex(index);
+      setInitialMousePos({ x: e.clientX, y: e.clientY });
+      setInitialItemPos({
+        x: rectangles[index].x,
+        y: rectangles[index].y,
+      });
+    }
+  };
 
-    setDroppedItems((prevItems) => prevItems.filter((_, i) => i !== index));
-    setPositions((prevPositions) =>
-      prevPositions.filter((_, i) => i !== index)
-    );
+  const handleRectMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+  };
+
+  const handleRectMouseMove = (e, index) => {
+    if (isDragging && draggingItemIndex === index) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const deltaX = e.clientX - initialMousePos.x;
+      const deltaY = e.clientY - initialMousePos.y;
+      const newX = initialItemPos.x + deltaX;
+      const newY = initialItemPos.y + deltaY;
+      const updatedRectangles = [...rectangles];
+      updatedRectangles[index] = {
+        ...updatedRectangles[index],
+        x: newX,
+        y: newY,
+      };
+      setRectangles(updatedRectangles);
+    }
+    if (isResizing && resizingItemIndex === index) {
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const currentX = e.clientX - canvasRect.left;
+      const currentY = e.clientY - canvasRect.top;
+      const updatedRectangles = [...rectangles];
+      updatedRectangles[index] = {
+        ...updatedRectangles[index],
+        width: currentX - updatedRectangles[index].x,
+        height: currentY - updatedRectangles[index].y,
+      };
+      setRectangles(updatedRectangles);
+    }
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         selectedItemIndex !== null &&
-        !itemRefs.current[selectedItemIndex]?.contains(event.target)
+        !canvasRef.current?.contains(event.target)
       ) {
         setSelectedItemIndex(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [selectedItemIndex]);
 
   return (
     <div
-      ref={dropZoneRef}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      ref={canvasRef}
       style={{
-        width: "80%",
+        width: "100%",
         height: "100%",
         border: "1px dashed black",
         position: "relative",
       }}
+      onMouseDown={handleMouseDownCanvas}
+      onMouseMove={(e) => handleMouseMoveCanvas(e)}
+      onMouseUp={handleMouseUpCanvas}
     >
-      {droppedItems.map((item, index) => (
+      <Toolbar selectedTool={selectedTool} onSelectTool={handleSelectTool} />
+      {rectangles.map((rect, index) => (
         <div
           key={index}
-          ref={(el) => (itemRefs.current[index] = el)}
           style={{
-            width: "100px",
-            height: "80px",
-            textAlign: "center",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "8px",
-            cursor: "move",
             position: "absolute",
-            transform: `translate3d(${positions[index].x}px, ${positions[index].y}px, 0px)`,
-            zIndex: isDragging && draggingItemIndex === index ? 1000 : 1,
-            boxShadow:
-              isDragging && draggingItemIndex === index
-                ? "rgba(60, 64, 67, 0.3) 0px 1px 2px 0.4px, rgba(60, 64, 67, 0.25) 0px 2px 6px 2.8px"
-                : "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
-            border: selectedItemIndex === index ? "2px solid #007BFF" : "none",
-            backgroundColor: "transparent",
-            textTransform: "capitalize",
+            backgroundColor: "rgba(255, 0, 0, 0.5)",
+            left: rect.x,
+            top: rect.y,
+            width: rect.width,
+            height: rect.height,
+            cursor: "move",
           }}
-          className="test"
-          onMouseDown={(e) => handleMouseDown(e, index)}
-          onClick={() => handleItemClick(index)}
+          onMouseDown={(e) => handleRectMouseDown(e, index)}
+          onMouseMove={(e) => handleRectMouseMove(e, index)}
+          onMouseUp={handleRectMouseUp}
         >
-          {item}
-          <div
-            className="list"
-            style={{
-              width: "100%",
-              position: "absolute",
-              bottom: `${positions[index].y <= 50 ? -60 : 100}px`,
-              cursor: "pointer",
-              fontSize: "18px",
-              display: selectedItemIndex === index ? "flex" : "none",
-              zIndex: 1001,
-            }}
-          >
-            <ul
+          {selectedItemIndex === index && (
+            <div
+              className="resize-handle"
               style={{
-                width: "100%",
-                height: "auto",
-                listStyleType: "none",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                textAlign: "center",
-                gap: "5px",
-                background: "white",
-                fontSize: "18px",
-                padding: "10px 8px",
-                borderRadius: "10px",
-                boxShadow:
-                  "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
+                position: "absolute",
+                bottom: "0",
+                right: "0",
+                width: "10px",
+                height: "10px",
+                backgroundColor: "black",
+                cursor: "nwse-resize",
               }}
-            >
-              <li
-                style={{ display: "flex" }}
-                onClick={() => handleDuplicate(index)}
-              >
-                <IoDuplicateOutline />
-              </li>
-              <li
-                style={{ display: "flex" }}
-                onClick={() => handleDelete(index)}
-              >
-                <AiOutlineDelete />
-              </li>
-              <li style={{ display: "flex" }}>
-                <BsThreeDots />
-              </li>
-            </ul>
-          </div>
-          {selectedItemIndex == index && (
-            <div className="size-btn">
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  position: "absolute",
-                  top: "-6%",
-                  left: "-6%",
-                  color: "white",
-                  cursor: "col-resize",
-                  borderRadius: "50%",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-                onClick={() => alert(123)}
-              ></div>
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  position: "absolute",
-                  top: "-6%",
-                  right: "-6%",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "50%",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  position: "absolute",
-                  bottom: "-6%",
-                  right: "-6%",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "50%",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "14px",
-                  height: "14px",
-                  position: "absolute",
-                  bottom: "-6%",
-                  left: "-6%",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "50%",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "24px",
-                  height: "10px",
-                  position: "absolute",
-                  top: "-6%",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "5px",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "24px",
-                  height: "10px",
-                  position: "absolute",
-                  bottom: "-6%",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "5px",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "10px",
-                  height: "24px",
-                  position: "absolute",
-                  bottom: "50%",
-                  left: "-6%",
-                  transform: "translateY(50%)",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "5px",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "10px",
-                  height: "24px",
-                  position: "absolute",
-                  bottom: "50%",
-                  right: "-6%",
-                  transform: "translateY(50%)",
-                  color: "white",
-                  cursor: "pointer",
-                  borderRadius: "5px",
-                  // background: "#007bff",
-                  border: "1px solid gray",
-                  background: "white",
-                }}
-              ></div>
-            </div>
+            />
           )}
         </div>
       ))}
-      <button
-        className="canvas-content"
-        onClick={handleUndo}
-        style={{
-          position: "absolute",
-          bottom: 10,
-          left: 10,
-          padding: "10px",
-          border: "none",
-          backgroundColor: "#007BFF",
-          color: "white",
-          borderRadius: "5px",
-          cursor: "pointer",
-          opacity: "0.8",
-        }}
-      >
-        Undo
-      </button>
+      <button className="undo-button">Undo</button>
     </div>
   );
 };

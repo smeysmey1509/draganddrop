@@ -7,6 +7,12 @@ const Toolbar = ({ selectedTool, onSelectTool }) => {
         display: "flex",
         padding: "10px",
         borderBottom: "1px solid #ccc",
+        position: "absolute",
+        bottom: 0,
+        left: "50%",
+        transform: "translate(-50%,0)",
+        background: "#fff",
+        zIndex: 1000,
       }}
     >
       <button
@@ -15,7 +21,7 @@ const Toolbar = ({ selectedTool, onSelectTool }) => {
           backgroundColor: selectedTool === "draw" ? "#007BFF" : "#fff",
           color: selectedTool === "draw" ? "#fff" : "#000",
         }}
-        onClick={() => onSelectTool("draw")}
+        onClick={onSelectTool}
       >
         Draw
       </button>
@@ -25,7 +31,7 @@ const Toolbar = ({ selectedTool, onSelectTool }) => {
           backgroundColor: selectedTool === "move" ? "#007BFF" : "#fff",
           color: selectedTool === "move" ? "#fff" : "#000",
         }}
-        onClick={() => onSelectTool("move")}
+        onClick={onSelectTool}
       >
         Move
       </button>
@@ -35,7 +41,7 @@ const Toolbar = ({ selectedTool, onSelectTool }) => {
           backgroundColor: selectedTool === "resize" ? "#007BFF" : "#fff",
           color: selectedTool === "resize" ? "#fff" : "#000",
         }}
-        onClick={() => onSelectTool("resize")}
+        onClick={onSelectTool}
       >
         Resize
       </button>

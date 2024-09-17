@@ -59,6 +59,7 @@ const DropZone = () => {
     const dropZone = dropZoneRef.current;
     if (dropZone) {
       const dropZoneRect = dropZone.getBoundingClientRect();
+      console.log("dropZoneRect", dropZoneRect);
       const startX = e.clientX - dropZoneRect.left;
       const startY = e.clientY - dropZoneRect.top;
 
@@ -222,7 +223,7 @@ const DropZone = () => {
               top: rect.startY + "px",
               width: rect.width + "px",
               height: rect.height + "px",
-              backgroundColor: "#fff",
+              backgroundColor: "#D9D9D9",
               boxShadow:
                 "rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px",
               cursor: isMoving ? "move" : "auto",
